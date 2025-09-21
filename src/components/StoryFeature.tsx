@@ -14,6 +14,7 @@ import {
 	X,
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 
 interface Story {
 	id: string;
@@ -207,38 +208,33 @@ const StoryFeature: React.FC = () => {
 		});
 	};
 
-	const resizeImage = (base64: string): Promise<string> => {
-		return new Promise((resolve) => {
-			const img = new Image();
-			img.src = base64;
-			img.onload = () => {
-				const maxWidth = 1080;
-				const maxHeight = 1920;
-				let { width, height } = img;
+	const resizeImage = async (base64: string): Promise<string> => {
+		const response = await fetch(base64);
+		const blob = await response.blob();
 
-				if (width <= maxWidth && height <= maxHeight) {
-					resolve(base64);
-					return;
-				}
+		const imgBitmap = await createImageBitmap(blob);
 
-				const aspectRatio = width / height;
-				if (width > maxWidth) {
-					width = maxWidth;
-					height = width / aspectRatio;
-				}
-				if (height > maxHeight) {
-					height = maxHeight;
-					width = height * aspectRatio;
-				}
+		const maxWidth = 1080;
+		const maxHeight = 1920;
+		let { width, height } = imgBitmap;
 
-				const canvas = document.createElement('canvas');
-				canvas.width = width;
-				canvas.height = height;
-				const ctx = canvas.getContext('2d');
-				ctx?.drawImage(img, 0, 0, width, height);
-				resolve(canvas.toDataURL('image/jpeg', 0.9));
-			};
-		});
+		const aspectRatio = width / height;
+		if (width > maxWidth) {
+			width = maxWidth;
+			height = width / aspectRatio;
+		}
+		if (height > maxHeight) {
+			height = maxHeight;
+			width = height * aspectRatio;
+		}
+
+		const canvas = document.createElement('canvas');
+		canvas.width = width;
+		canvas.height = height;
+		const ctx = canvas.getContext('2d');
+		ctx?.drawImage(imgBitmap, 0, 0, width, height);
+
+		return canvas.toDataURL('image/jpeg', 0.9);
 	};
 
 	const openStoryViewer = (index: number) => {
@@ -479,9 +475,12 @@ const StoryFeature: React.FC = () => {
 											<div className='absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
 												<div className='flex items-center gap-2'>
 													{story.avatar && (
-														<img
+														<Image
 															src={story.avatar}
 															className='w-8 h-8 rounded-full border-2 border-white/80'
+															alt="Avatar"
+															width={1000}
+															height={1000}
 														/>
 													)}
 													<div className='flex-1'>
@@ -565,11 +564,14 @@ const StoryFeature: React.FC = () => {
 									<div className='relative'>
 										<div className='w-11 h-11 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 p-[2px]'>
 											<div className='w-full h-full rounded-full bg-black p-[2px]'>
-												<img
+												<Image
 													src={
 														stories[selectedStoryIndex].avatar ||
 														`https://i.pravatar.cc/150?img=${selectedStoryIndex}`
 													}
+													alt="Header"
+													width={1000}
+													height={1000}
 													className='w-full h-full rounded-full object-cover'
 												/>
 											</div>
@@ -609,10 +611,12 @@ const StoryFeature: React.FC = () => {
 
 							{/* Story Image */}
 							<div className='h-full flex items-center justify-center px-4 relative'>
-								<img
+								<Image
 									src={stories[selectedStoryIndex].imageData}
 									alt='Story'
 									className='max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl'
+									width={1000}
+									height={1000}
 								/>
 
 								{/* Heart Animation */}
