@@ -66,7 +66,7 @@ const StoryFeature: React.FC = () => {
 						handleNextStory();
 						return 0;
 					}
-					return prev + 1.25; // 8 seconds per story
+					return prev + 3.33; // 8 seconds per story
 				});
 			}, 100);
 		} else {
